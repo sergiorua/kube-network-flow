@@ -1,0 +1,15 @@
+@startuml Pod
+
+start
+
+if (direction?) then (ingress)
+  fork
+    :Pod 1;
+  fork again
+    :Pod 2;
+  end fork
+else (egress)
+  :Allow All;
+endif
+
+@enduml
