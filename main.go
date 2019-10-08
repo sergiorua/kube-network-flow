@@ -19,13 +19,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"path/filepath"
 
+	v1 "k8s.io/api/networking/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/Masterminds/sprig"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -33,6 +37,43 @@ import (
 var verbose bool
 var local bool
 var kubeconfig string
+
+const umlTemplate = `
+{{ $first := true }}
+@startuml {{.Name}}
+
+start
+
+if (direction?) then (ingress)
+{{ range $_, $v := .Spec.Ingress -}}
+{{ if $first }}
+fork
+{{ else }}
+fork again
+{{ end }}
+{{ $first = false }}
+{{ range $_, $f := $v.From -}}
+{{if $f.NamespaceSelector -}}
+{{ range $index, $label := $f.NamespaceSelector.MatchLabels -}}
+    {{ (print ":" $label) | indent 4 }};
+    floating note left: {{$index}}
+{{ end }}
+{{- end }}
+{{if $f.PodSelector -}}
+{{ range $index, $label := $f.PodSelector.MatchLabels -}}
+	{{ (print ":" $label) | indent 4 }};
+    floating note left: {{$index}}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+  end fork
+else (egress)
+  :Allow All;
+endif
+
+@enduml
+`
 
 func init() {
 	flag.BoolVar(&verbose, "v", false, "Verbose")
@@ -45,6 +86,18 @@ func init() {
 	}
 }
 
+// RenderUml returns a UML diagram using http://plantuml.com/
+func RenderUml(networkPolicy v1.NetworkPolicy) {
+	tmpl, err := template.New("Policies").Funcs(sprig.FuncMap()).Parse(umlTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	err = tmpl.Execute(os.Stdout, networkPolicy)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func main() {
 	flag.Parse()
@@ -71,7 +124,7 @@ func main() {
 
 	policies, err := clientset.NetworkingV1().NetworkPolicies("").List(metav1.ListOptions{})
 	for _, pol := range policies.Items {
-		fmt.Printf("======= %v ==========\n", pol.Name)
+		RenderUml(pol)
 		for _, ing := range pol.Spec.Ingress {
 			for _, fr := range ing.From {
 				if fr.PodSelector == nil {

@@ -1,12 +1,12 @@
-@startuml Pod
+@startuml retail-security-dashboard-app
 
 start
 
 if (direction?) then (ingress)
   fork
-    :Pod 1;
-  fork again
-    :Pod 2;
+    :retail-security-dashboard;
+    floating note left: product
+
   end fork
 else (egress)
   :Allow All;
