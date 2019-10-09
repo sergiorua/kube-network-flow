@@ -20,4 +20,4 @@ There are many ways to display the results, see this website: http://plantuml.co
 
 ## Sample
 
-![alt text][sample-output.png]
+[sample]: https://github.com/sergiorua/kube-network-flow/raw/master/sample-output.png
