@@ -9,10 +9,14 @@ It allows you to create a UML visualization of your Network Policies.
 ```sh
 Usage of ./kube-network-flow:
   -kubeconfig string
-        (optional) absolute path to the kubeconfig file (default "/Users/srua/.kube/config")
+    	(optional) absolute path to the kubeconfig file (default "/Users/srua/.kube/config")
+  -namespace string
+    	Limit to just this namespace (default all)
+  -policy string
+    	Limit to just this policy (default all)
   -template string
-        absolute path to the template file
-  -v    Verbose
+    	absolute path to the template file
+  -v	Verbose
 ```
 
 The command execution returns a list of all the network policies in UML format. There is a default [PlantUML](http://plantuml.com/) template similar to the file `net_template.plantuml.tmpl` this repository but you can create your own using Golang templates.
