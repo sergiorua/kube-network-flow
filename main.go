@@ -37,6 +37,8 @@ import (
 var verbose bool
 var kubeconfig string
 var templFile string
+var namespace string
+var policyName string
 
 const umlTemplate = `
 @startuml {{.Name}}
@@ -109,6 +111,8 @@ func init() {
 		flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
 	}
 	flag.StringVar(&templFile, "template", "", "absolute path to the template file")
+	flag.StringVar(&namespace, "namespace", "", "Limit to just this namespace (default all)")
+	flag.StringVar(&policyName, "policyName", "", "Limit to just this policy (default all)")
 }
 
 // RenderUml returns a UML diagram using http://plantuml.com/
@@ -150,7 +154,7 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
-	policies, err := clientset.NetworkingV1().NetworkPolicies("").List(metav1.ListOptions{})
+	policies, err := clientset.NetworkingV1().NetworkPolicies(namespace).List(metav1.ListOptions{})
 	for _, pol := range policies.Items {
 		RenderUml(templ, pol)
 	}

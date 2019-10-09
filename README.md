@@ -1,5 +1,8 @@
 # kube-network-flow
-Traffic flow chart from NetworkPolicy
+
+## What for?
+
+It allows you to create a UML visualization of your Network Policies.
 
 ## Usage
 
