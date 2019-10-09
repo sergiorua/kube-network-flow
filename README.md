@@ -17,3 +17,7 @@ The command execution returns a list of all the network policies in UML format. 
 ## Display
 
 There are many ways to display the results, see this website: http://plantuml.com/running
+
+## Sample
+
+![alt text][sample-output.png]
