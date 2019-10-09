@@ -18,8 +18,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,34 +35,35 @@ import (
 )
 
 var verbose bool
-var local bool
 var kubeconfig string
+var templFile string
 
 const umlTemplate = `
-{{ $first := true }}
 @startuml {{.Name}}
 
 start
 
 if (direction?) then (ingress)
 {{ range $_, $v := .Spec.Ingress -}}
-{{ if $first }}
-fork
-{{ else }}
-fork again
-{{ end }}
-{{ $first = false }}
+	fork
 {{ range $_, $f := $v.From -}}
+{{ if $f.IPBlock -}}
+	{{ (print ":" $f.IPBlock.CIDR) }};
+	floating note left: IP Block
+	fork again
+{{- end -}}
 {{if $f.NamespaceSelector -}}
 {{ range $index, $label := $f.NamespaceSelector.MatchLabels -}}
     {{ (print ":" $label) | indent 4 }};
     floating note left: {{$index}}
-{{ end }}
+	fork again
+{{- end -}}
 {{- end }}
 {{if $f.PodSelector -}}
 {{ range $index, $label := $f.PodSelector.MatchLabels -}}
 	{{ (print ":" $label) | indent 4 }};
     floating note left: {{$index}}
+	fork again
 {{- end }}
 {{- end }}
 {{- end }}
@@ -77,18 +78,18 @@ endif
 
 func init() {
 	flag.BoolVar(&verbose, "v", false, "Verbose")
-	flag.BoolVar(&local, "l", false, "Run outside kube cluster (dev purposes)")
 
 	if home := homeDir(); home != "" {
 		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	} else {
 		flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
 	}
+	flag.StringVar(&templFile, "template", "", "absolute path to the template file")
 }
 
 // RenderUml returns a UML diagram using http://plantuml.com/
-func RenderUml(networkPolicy v1.NetworkPolicy) {
-	tmpl, err := template.New("Policies").Funcs(sprig.FuncMap()).Parse(umlTemplate)
+func RenderUml(templ string, networkPolicy v1.NetworkPolicy) {
+	tmpl, err := template.New("Policies").Funcs(sprig.FuncMap()).Parse(templ)
 	if err != nil {
 		panic(err)
 	}
@@ -103,17 +104,20 @@ func main() {
 	flag.Parse()
 	var config *rest.Config
 	var err error
+	var templ string
 
-	if local == false {
-		config, err = rest.InClusterConfig()
+	if templFile != "" {
+		dat, err := ioutil.ReadFile(templFile)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
+		templ = string(dat)
 	} else {
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			panic(err.Error())
-		}
+		templ = umlTemplate
+	}
+	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		panic(err.Error())
 	}
 
 	// create the clientset
@@ -124,17 +128,7 @@ func main() {
 
 	policies, err := clientset.NetworkingV1().NetworkPolicies("").List(metav1.ListOptions{})
 	for _, pol := range policies.Items {
-		RenderUml(pol)
-		for _, ing := range pol.Spec.Ingress {
-			for _, fr := range ing.From {
-				if fr.PodSelector == nil {
-					continue
-				}
-				for k, v := range fr.PodSelector.MatchLabels {
-					fmt.Printf("%v = %v\n", k, v)
-				}
-			}
-		}
+		RenderUml(templ, pol)
 	}
 
 }
