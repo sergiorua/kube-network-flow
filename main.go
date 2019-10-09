@@ -32,6 +32,8 @@ import (
 	"github.com/Masterminds/sprig"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	api "k8s.io/kubernetes/pkg/apis/core"
 )
 
 var verbose bool
@@ -112,7 +114,7 @@ func init() {
 	}
 	flag.StringVar(&templFile, "template", "", "absolute path to the template file")
 	flag.StringVar(&namespace, "namespace", "", "Limit to just this namespace (default all)")
-	flag.StringVar(&policyName, "policyName", "", "Limit to just this policy (default all)")
+	flag.StringVar(&policyName, "policy", "", "Limit to just this policy (default all)")
 }
 
 // RenderUml returns a UML diagram using http://plantuml.com/
@@ -154,7 +156,14 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
-	policies, err := clientset.NetworkingV1().NetworkPolicies(namespace).List(metav1.ListOptions{})
+	filter := metav1.ListOptions{}
+	if policyName != "" {
+		filter = metav1.ListOptions{
+			FieldSelector: fields.OneTermEqualSelector(api.ObjectNameField, policyName).String(),
+		}
+	}
+
+	policies, err := clientset.NetworkingV1().NetworkPolicies(namespace).List(filter)
 	for _, pol := range policies.Items {
 		RenderUml(templ, pol)
 	}
