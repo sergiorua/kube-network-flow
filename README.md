@@ -12,7 +12,7 @@ Usage of ./kube-network-flow:
   -v    Verbose
 ```
 
-The command execution returns a list of all the network policies in UML format. There is a default [http://plantuml.com/ | PlantUML] template similar to the file `net_template.plantuml.tmpl` this repository but you can create your own using Golang templates.
+The command execution returns a list of all the network policies in UML format. There is a default [PlantUML](http://plantuml.com/) template similar to the file `net_template.plantuml.tmpl` this repository but you can create your own using Golang templates.
 
 ## Display
 
