@@ -70,7 +70,31 @@ if (direction?) then (ingress)
 {{- end }}
   end fork
 else (egress)
-  :Allow All;
+{{ range $_, $v := .Spec.Egress -}}
+	fork
+{{ range $_, $f := $v.To -}}
+{{ if $f.IPBlock -}}
+	{{ (print ":" $f.IPBlock.CIDR) }};
+	floating note left: IP Block
+	fork again
+{{- end -}}
+{{if $f.NamespaceSelector -}}
+{{ range $index, $label := $f.NamespaceSelector.MatchLabels -}}
+    {{ (print ":" $label) | indent 4 }};
+    floating note left: {{$index}}
+	fork again
+{{- end -}}
+{{- end }}
+{{if $f.PodSelector -}}
+{{ range $index, $label := $f.PodSelector.MatchLabels -}}
+	{{ (print ":" $label) | indent 4 }};
+    floating note left: {{$index}}
+	fork again
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+  end fork
 endif
 
 @enduml
