@@ -48,8 +48,8 @@ const umlTemplate = `
 start
 
 if (direction?) then (ingress)
-{{ range $_, $v := .Spec.Ingress -}}
 	fork
+{{ range $_, $v := .Spec.Ingress -}}
 {{ range $_, $f := $v.From -}}
 {{ if $f.IPBlock -}}
 	{{ (print ":" $f.IPBlock.CIDR) }};
@@ -68,13 +68,14 @@ if (direction?) then (ingress)
 	{{ (print ":" $label) | indent 4 }};
     floating note left: {{$index}}
 	fork again
+{{ end }}
 {{- end }}
 {{- end }}
-{{- end }}
-{{- end }}
+{{ end }}
   end fork
 else (egress)
 {{ range $_, $v := .Spec.Egress -}}
+{{ if $v }}
 	fork
 {{ range $_, $f := $v.To -}}
 {{ if $f.IPBlock -}}
@@ -87,8 +88,8 @@ else (egress)
     {{ (print ":" $label) | indent 4 }};
     floating note left: {{$index}}
 	fork again
-{{- end -}}
-{{- end }}
+{{ end }}
+{{ end }}
 {{if $f.PodSelector -}}
 {{ range $index, $label := $f.PodSelector.MatchLabels -}}
 	{{ (print ":" $label) | indent 4 }};
@@ -97,8 +98,9 @@ else (egress)
 {{- end }}
 {{- end }}
 {{- end }}
-{{- end }}
+{{ end }}
   end fork
+{{ end }}
 endif
 
 @enduml
