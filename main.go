@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"html/template"
 	"io/ioutil"
@@ -165,7 +166,7 @@ func main() {
 		}
 	}
 
-	policies, err := clientset.NetworkingV1().NetworkPolicies(namespace).List(filter)
+	policies, err := clientset.NetworkingV1().NetworkPolicies(namespace).List(context.TODO(), filter)
 	for _, pol := range policies.Items {
 		RenderUml(templ, pol)
 	}
