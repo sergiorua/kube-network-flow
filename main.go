@@ -34,7 +34,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	api "k8s.io/kubernetes/pkg/apis/core"
 )
 
 var verbose bool
@@ -110,7 +109,9 @@ endif
 func init() {
 	flag.BoolVar(&verbose, "v", false, "Verbose")
 
-	if home := homeDir(); home != "" {
+	if os.Getenv("KUBECONFIG") != "" {
+		flag.StringVar(&kubeconfig, "kubeconfig", os.Getenv("KUBECONFIG"), "(optional) absolute path to the kubeconfig file")
+	} else if home := homeDir(); home != "" {
 		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	} else {
 		flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
@@ -148,6 +149,7 @@ func main() {
 	} else {
 		templ = umlTemplate
 	}
+
 	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		panic(err.Error())
@@ -162,7 +164,7 @@ func main() {
 	filter := metav1.ListOptions{}
 	if policyName != "" {
 		filter = metav1.ListOptions{
-			FieldSelector: fields.OneTermEqualSelector(api.ObjectNameField, policyName).String(),
+			FieldSelector: fields.OneTermEqualSelector("metadata.name", policyName).String(),
 		}
 	}
 
