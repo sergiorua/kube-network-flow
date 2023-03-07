@@ -1,5 +1,5 @@
 require (
-	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/huandu/xstrings v1.2.0 // indirect
@@ -7,8 +7,7 @@ require (
 	k8s.io/api v0.20.3
 	k8s.io/apimachinery v0.20.3
 	k8s.io/client-go v0.20.3
-	k8s.io/cloud-provider v0.20.3
-	k8s.io/kubernetes v1.20.3 // indirect
+	k8s.io/kubernetes v1.20.3
 )
 
 replace (
