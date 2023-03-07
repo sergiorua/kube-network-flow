@@ -13,7 +13,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: linux
         goarch: amd64
-  release-linux-amd64:
+  release-linux-arm64:
     name: release linux/arm64
     runs-on: ubuntu-latest
     steps:
